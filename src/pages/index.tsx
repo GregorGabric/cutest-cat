@@ -69,13 +69,15 @@ const Home: NextPage = () => {
         <meta name="description" content="Choose the cutest cat" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="container flex items-center justify-center min-h-screen p-4 mx-auto gap-10">
+      <main className="flex flex-col sm:flex-row items-center justify-center min-h-screen p-4 mx-auto gap-10">
         <CatCard
+          btnClassName="bg-blue-500"
           onClick={selectedTheCutest}
           catNumber={1}
           cat={firstCat as CatResponse}
         />
         <CatCard
+          btnClassName="bg-green-500"
           onClick={selectedTheCutest}
           catNumber={2}
           cat={secondCat as CatResponse}
@@ -91,19 +93,21 @@ interface CatCardProps {
   cat: CatResponse;
   catNumber: number;
   onClick: (event: SyntheticEvent<HTMLButtonElement>) => void;
+  btnClassName: string;
 }
 
 const CatCard: FC<CatCardProps> = ({
   cat: { id, url },
   catNumber,
   onClick,
+  btnClassName,
 }) => {
   return (
     <div key={id} className="flex flex-col gap-2 ">
-      <div className="shadow rounder aspect-square relative h-[400px] w-[400px]">
+      <div className="shadow rounder aspect-square relative h-[200px] w-[200px]  sm:h-[400px] sm:w-[400px]">
         {url && (
           <Image
-            className="transition-all"
+            className=""
             loading="eager"
             objectFit="cover"
             src={url}
@@ -115,7 +119,7 @@ const CatCard: FC<CatCardProps> = ({
       <button
         data-cat-number={catNumber}
         onClick={onClick}
-        className="rounded-lg mx-auto px-4 py-2 bg-green-400"
+        className={`rounded-lg mx-auto px-4 py-2 ${btnClassName}`}
       >
         Im the cutest
       </button>
