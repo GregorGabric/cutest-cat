@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import { FC } from "react";
+import { FC, SyntheticEvent } from "react";
 import { trpc } from "../utils/trpc";
 
 interface CatResponse {
@@ -12,20 +12,55 @@ interface CatResponse {
 }
 
 const Home: NextPage = () => {
-  const { isLoading, data } = trpc.useQuery(["cat.getTwoCats"], {
-    refetchOnWindowFocus: false,
+  const { isLoading, data, refetch } = trpc.useQuery(["cat.getTwoCats"], {
     refetchInterval: false,
-    refetchIntervalInBackground: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
-
-  // const { data, isLoading } =
-  //   trpc.proxy.example.getCat.useQuery<Array<CatResponse>>();
+  const castVote = trpc.useMutation(["cat.cast-vote"]);
+  const createCat = trpc.useMutation(["cat.create-cat"]);
 
   if (isLoading) {
     return <p>Loading</p>;
   }
 
-  const [firstCat, secondCat] = data;
+  const [firstCat, secondCat] = data as Array<CatResponse>;
+
+  const selectedTheCutest = async ({
+    currentTarget: {
+      dataset: { catNumber },
+    },
+  }: SyntheticEvent<HTMLButtonElement>) => {
+    if (!firstCat?.id || !secondCat?.id) {
+      return;
+    }
+
+    await createCat.mutateAsync({
+      url: firstCat.url,
+      id: firstCat.id,
+    });
+    await createCat.mutateAsync({
+      url: secondCat.url,
+      id: secondCat.id,
+    });
+
+    switch (catNumber) {
+      case "1":
+        castVote.mutate({
+          votedFor: firstCat.id,
+          votedAgainst: secondCat.id,
+        });
+        break;
+      case "2":
+        castVote.mutate({
+          votedFor: secondCat.id,
+          votedAgainst: firstCat.id,
+        });
+        break;
+    }
+
+    refetch();
+  };
 
   return (
     <>
@@ -35,8 +70,16 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container flex items-center justify-center min-h-screen p-4 mx-auto gap-10">
-        <CatCard cat={firstCat} />
-        <CatCard cat={secondCat} />
+        <CatCard
+          onClick={selectedTheCutest}
+          catNumber={1}
+          cat={firstCat as CatResponse}
+        />
+        <CatCard
+          onClick={selectedTheCutest}
+          catNumber={2}
+          cat={secondCat as CatResponse}
+        />
       </main>
     </>
   );
@@ -46,9 +89,15 @@ export default Home;
 
 interface CatCardProps {
   cat: CatResponse;
+  catNumber: number;
+  onClick: (event: SyntheticEvent<HTMLButtonElement>) => void;
 }
 
-const CatCard: FC<CatCardProps> = ({ cat: { id, url } }) => {
+const CatCard: FC<CatCardProps> = ({
+  cat: { id, url },
+  catNumber,
+  onClick,
+}) => {
   return (
     <div key={id} className="flex flex-col gap-2 ">
       <div className="shadow rounder aspect-square relative h-[400px] w-[400px]">
@@ -63,7 +112,11 @@ const CatCard: FC<CatCardProps> = ({ cat: { id, url } }) => {
           />
         )}
       </div>
-      <button className="rounded-lg mx-auto px-4 py-2 bg-green-400 active:translate-y-1 transition-transform ease-in">
+      <button
+        data-cat-number={catNumber}
+        onClick={onClick}
+        className="rounded-lg mx-auto px-4 py-2 bg-green-400"
+      >
         Im the cutest
       </button>
     </div>

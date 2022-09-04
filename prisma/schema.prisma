@@ -1,15 +1,27 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "sqlite"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model Example {
-    id String @id @default(cuid())
+model Vote {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  votedFor       Cat      @relation(name: "votesFor", fields: [votedForId], references: [id])
+  votedForId     String
+  votedAgainst   Cat      @relation(name: "votesAgainst", fields: [votedAgainstId], references: [id])
+  votedAgainstId String
+
+  @@index([votedForId])
+  @@index([votedAgainstId])
+}
+
+model Cat {
+  id          String @id
+  url         String
+  VoteFor     Vote[] @relation("votesFor")
+  VoteAgainst Vote[] @relation("votesAgainst")
 }
