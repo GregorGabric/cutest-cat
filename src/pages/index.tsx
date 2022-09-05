@@ -3,6 +3,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { getPlaiceholder, IGetPlaiceholderReturn } from "plaiceholder";
 import { FC, SyntheticEvent } from "react";
+import Button from "../components/Button";
 import { trpc } from "../utils/trpc";
 
 export const getStaticProps = async () => {
@@ -138,13 +139,13 @@ const CatCard: FC<CatCardProps> = ({
           alt="random cat"
         />
       </div>
-      <button
-        data-cat-number={catNumber}
+      <Button
+        catNumber={catNumber}
         onClick={onClick}
-        className={`rounded-lg mx-auto px-4 text-white py-2 ${btnClassName}`}
+        btnClassName={btnClassName}
       >
         Vote for me
-      </button>
+      </Button>
     </div>
   );
 };
