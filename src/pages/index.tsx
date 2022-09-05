@@ -12,7 +12,7 @@ export const getStaticProps = async () => {
   ).then((data) => data.json());
   const firstCatPlaceholder = await getPlaiceholder(firstCat.url);
   const secondCatPlaceholder = await getPlaiceholder(secondCat.url);
-  console.log(firstCatPlaceholder, secondCatPlaceholder);
+
   return {
     props: {
       catPlaceholder: [firstCatPlaceholder, secondCatPlaceholder],
