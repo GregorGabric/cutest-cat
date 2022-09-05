@@ -1,15 +1,24 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import {
-  Dispatch,
-  FC,
-  SetStateAction,
-  SyntheticEvent,
-  useEffect,
-  useState,
-} from "react";
+import { getPlaiceholder, IGetPlaiceholderReturn } from "plaiceholder";
+import { FC, SyntheticEvent } from "react";
 import { trpc } from "../utils/trpc";
+
+export const getStaticProps = async () => {
+  const [firstCat, secondCat] = await fetch(
+    "https://api.thecatapi.com/v1/images/search?limit=2"
+  ).then((data) => data.json());
+  const firstCatPlaceholder = await getPlaiceholder(firstCat.url);
+  const secondCatPlaceholder = await getPlaiceholder(secondCat.url);
+  console.log(firstCatPlaceholder, secondCatPlaceholder);
+  return {
+    props: {
+      catPlaceholder: [firstCatPlaceholder, secondCatPlaceholder],
+    },
+    revalidate: 1,
+  };
+};
 
 interface CatResponse {
   id: string;
@@ -18,26 +27,17 @@ interface CatResponse {
   height: number;
 }
 
-const Home: NextPage = () => {
-  const [isImageLoading, setIsImageLoading] = useState(true);
-
+const Home: NextPage<{
+  catPlaceholder: Array<IGetPlaiceholderReturn>;
+}> = ({ catPlaceholder }) => {
   const castVote = trpc.useMutation(["cat.cast-vote"]);
   const createCat = trpc.useMutation(["cat.create-cat"]);
-  const { isLoading, data, refetch, isFetching } = trpc.useQuery(
-    ["cat.getTwoCats"],
-    {
-      refetchInterval: false,
-      refetchOnReconnect: false,
-      refetchOnWindowFocus: false,
-    }
-  );
-
-  useEffect(() => {
-    if (isFetching) {
-      setIsImageLoading(true);
-    } else {
-    }
-  }, [isFetching]);
+  const { isLoading, data, refetch } = trpc.useQuery(["cat.getTwoCats"], {
+    refetchInterval: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+    keepPreviousData: true,
+  });
 
   if (isLoading) {
     return <p>Loading</p>;
@@ -75,8 +75,6 @@ const Home: NextPage = () => {
         });
         break;
     }
-
-    setIsImageLoading(true);
     refetch();
   };
 
@@ -91,16 +89,14 @@ const Home: NextPage = () => {
       </Head>
       <main className="flex flex-col sm:flex-row items-center justify-center min-h-screen p-4 mx-auto gap-10">
         <CatCard
-          isImageLoading={isImageLoading}
-          setIsImageLoading={setIsImageLoading}
+          placeholder={catPlaceholder?.[0]}
           btnClassName="bg-blue-500"
           onClick={selectedTheCutest}
           catNumber={1}
           cat={firstCat as CatResponse}
         />
         <CatCard
-          isImageLoading={isImageLoading}
-          setIsImageLoading={setIsImageLoading}
+          placeholder={catPlaceholder?.[1]}
           btnClassName="bg-green-500"
           onClick={selectedTheCutest}
           catNumber={2}
@@ -118,8 +114,7 @@ interface CatCardProps {
   catNumber: number;
   onClick: (event: SyntheticEvent<HTMLButtonElement>) => void;
   btnClassName: string;
-  isImageLoading: boolean;
-  setIsImageLoading: Dispatch<SetStateAction<boolean>>;
+  placeholder?: IGetPlaiceholderReturn;
 }
 
 const CatCard: FC<CatCardProps> = ({
@@ -127,34 +122,28 @@ const CatCard: FC<CatCardProps> = ({
   catNumber,
   onClick,
   btnClassName,
-  isImageLoading,
-  setIsImageLoading,
+  placeholder,
 }) => {
-  const onLoadingComplete = () => setIsImageLoading(false);
-
   return (
     <div key={id} className="flex flex-col gap-2 ">
-      <div className="shadow rounder aspect-square relative h-[200px] w-[200px]  sm:h-[400px] sm:w-[400px]">
-        {isImageLoading && <h1>loading</h1>}
+      <div className="flex items-center justify-center shadow rounder aspect-square relative h-[200px] w-[200px]  sm:h-[400px] sm:w-[400px]">
         <Image
-          onLoadingComplete={onLoadingComplete}
-          className={`${
-            isImageLoading ? "opacity-0" : "opacity-100"
-          } transition-opacity`}
-          loading="eager"
+          className="rounded"
+          placeholder="blur"
+          blurDataURL={placeholder?.base64}
+          priority={true}
           objectFit="cover"
           src={url}
           layout="fill"
           alt="random cat"
         />
-        {/* )} */}
       </div>
       <button
         data-cat-number={catNumber}
         onClick={onClick}
-        className={`rounded-lg mx-auto px-4 py-2 ${btnClassName}`}
+        className={`rounded-lg mx-auto px-4 text-white py-2 ${btnClassName}`}
       >
-        Im the cutest
+        Vote for me
       </button>
     </div>
   );

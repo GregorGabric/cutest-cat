@@ -1,4 +1,5 @@
 import { env } from "./src/env/server.mjs";
+import { withPlaiceholder } from "@plaiceholder/next";
 
 /**
  * Don't be scared of the generics here.
@@ -12,10 +13,12 @@ function defineNextConfig(config) {
   return config;
 }
 
-export default defineNextConfig({
-  reactStrictMode: true,
-  swcMinify: true,
-  images: {
-    domains: ["cdn2.thecatapi.com"],
-  },
-});
+export default withPlaiceholder(
+  defineNextConfig({
+    reactStrictMode: true,
+    swcMinify: true,
+    images: {
+      domains: ["cdn2.thecatapi.com"],
+    },
+  })
+);
