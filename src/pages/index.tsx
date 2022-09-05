@@ -3,6 +3,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { getPlaiceholder, IGetPlaiceholderReturn } from "plaiceholder";
 import { FC, SyntheticEvent } from "react";
+import { useIsFetching } from "react-query";
 import Button from "../components/Button";
 import { trpc } from "../utils/trpc";
 
@@ -37,11 +38,10 @@ const Home: NextPage<{
     refetchInterval: false,
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
-    keepPreviousData: true,
   });
 
   if (isLoading) {
-    return <p>Loading</p>;
+    return <h1>Loading</h1>;
   }
 
   const selectedTheCutest = async ({
@@ -90,6 +90,7 @@ const Home: NextPage<{
       </Head>
       <main className="flex flex-col sm:flex-row items-center justify-center min-h-screen p-4 mx-auto gap-10">
         <CatCard
+          isLoading={isLoading}
           placeholder={catPlaceholder?.[0]}
           btnClassName="bg-blue-500"
           onClick={selectedTheCutest}
@@ -97,6 +98,7 @@ const Home: NextPage<{
           cat={firstCat as CatResponse}
         />
         <CatCard
+          isLoading={isLoading}
           placeholder={catPlaceholder?.[1]}
           btnClassName="bg-green-500"
           onClick={selectedTheCutest}
@@ -116,6 +118,7 @@ interface CatCardProps {
   onClick: (event: SyntheticEvent<HTMLButtonElement>) => void;
   btnClassName: string;
   placeholder?: IGetPlaiceholderReturn;
+  isLoading: boolean;
 }
 
 const CatCard: FC<CatCardProps> = ({
@@ -125,6 +128,7 @@ const CatCard: FC<CatCardProps> = ({
   btnClassName,
   placeholder,
 }) => {
+  const isLoading = useIsFetching();
   return (
     <div key={id} className="flex flex-col gap-2 ">
       <div className="flex items-center justify-center shadow rounder aspect-square relative h-[200px] w-[200px]  sm:h-[400px] sm:w-[400px]">
@@ -140,6 +144,7 @@ const CatCard: FC<CatCardProps> = ({
         />
       </div>
       <Button
+        isLoading={!!isLoading}
         catNumber={catNumber}
         onClick={onClick}
         btnClassName={btnClassName}
